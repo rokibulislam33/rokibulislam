@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outreach Kit Generator</title>
+<style>
+  :root {
+    --accent: #1F4E5F;
+    --accent-light: #EAF2F4;
+    --coral: #D97757;
+    --text: #22333B;
+    --muted: #6B7C82;
+    --border: #D8E4E7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    background: #FAFBFB;
+    color: var(--text);
+    padding: 40px 20px 80px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 36px; }
+  .kicker { font-size: 13px; color: var(--coral); font-weight: 600; margin-bottom: 6px; }
+  h1 { font-size: 28px; margin: 0 0 10px; color: var(--accent); letter-spacing: -0.01em; }
+  .lede { color: var(--muted); font-size: 15px; line-height: 1.5; max-width: 480px; margin: 0 auto; }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+  .hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  input[type=text], input[type=password], textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    margin-bottom: 18px;
+    resize: vertical;
+    background: #fff;
+    color: var(--text);
+  }
+  textarea { min-height: 64px; }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+
+  button.generate {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.generate:hover { background: #163B48; }
+  button.generate:disabled { background: #9BB3B9; cursor: not-allowed; }
+
+  .error {
+    background: #FDEDEA;
+    border: 1px solid #E8B4A8;
+    color: #A8402C;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    display: none;
+  }
+
+  .results { display: none; }
+  .result-block { margin-bottom: 22px; }
+  .result-block h3 {
+    font-size: 14px;
+    color: var(--accent);
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .copy-btn {
+    font-size: 12px;
+    color: var(--coral);
+    background: none;
+    border: 1px solid var(--coral);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+  .copy-btn:hover { background: var(--coral); color: #fff; }
+  .script-text {
+    background: var(--accent-light);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  .loading { display: none; text-align: center; color: var(--muted); font-size: 14px; padding: 20px 0; }
+  .spinner {
+    width: 22px; height: 22px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Bonus tool</div>
+    <h1>Outreach kit generator</h1>
+    <p class="lede">Describe who you're targeting and what you offer. Get a personalized cold email, DM opener, and follow-up — ready to send.</p>
+  </header>
+
+  <div class="card">
+    <label for="accessCode">Access code</label>
+    <div class="hint">Sent to you after purchase</div>
+    <input type="password" id="accessCode" placeholder="Enter your access code">
+
+    <label for="audience">Who are you targeting?</label>
+    <div class="hint">Be specific — e.g. "local restaurants in Dhaka with inconsistent Instagram posting"</div>
+    <textarea id="audience" placeholder="e.g. small boutique clothing stores in Chittagong with under 2,000 followers"></textarea>
+
+    <label for="service">What do you offer?</label>
+    <div class="hint">e.g. Instagram + Facebook management, ad campaigns, content creation</div>
+    <input type="text" id="service" placeholder="e.g. full Instagram + Facebook management">
+
+    <label for="result">Main result you help them get</label>
+    <div class="hint">e.g. more bookings, more inquiries, more sales</div>
+    <input type="text" id="result" placeholder="e.g. more walk-in customers">
+
+    <div class="error" id="errorBox"></div>
+    <button class="generate" id="genBtn" onclick="generateKit()">Generate my outreach kit</button>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    Writing your personalized scripts...
+  </div>
+
+  <div class="results" id="results">
+    <div class="card">
+      <div class="result-block">
+        <h3>Cold email <button class="copy-btn" onclick="copyText('emailText', event)">Copy</button></h3>
+        <div class="script-text" id="emailText"></div>
+      </div>
+      <div class="result-block">
+        <h3>LinkedIn / DM opener <button class="copy-btn" onclick="copyText('dmText', event)">Copy</button></h3>
+        <div class="script-text" id="dmText"></div>
+      </div>
+      <div class="result-block" style="margin-bottom:0;">
+        <h3>Follow-up (day 3) <button class="copy-btn" onclick="copyText('followupText', event)">Copy</button></h3>
+        <div class="script-text" id="followupText"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Part of the Client Acquisition System · review before sending</footer>
+</div>
+
+<script>
+async function generateKit() {
+  const accessCode = document.getElementById('accessCode').value.trim();
+  const audience = document.getElementById('audience').value.trim();
+  const service = document.getElementById('service').value.trim();
+  const result = document.getElementById('result').value.trim();
+  const errorBox = document.getElementById('errorBox');
+  const btn = document.getElementById('genBtn');
+
+  errorBox.style.display = 'none';
+
+  if (!accessCode) {
+    errorBox.textContent = 'Please enter your access code.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  if (!audience || !service || !result) {
+    errorBox.textContent = 'Please fill in all fields so the scripts can be tailored properly.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  btn.disabled = true;
+
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessCode, audience, service, result })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Something went wrong.');
+    }
+
+    document.getElementById('emailText').textContent =
+      "Subject: " + data.email_subject + "\n\n" + data.email_body;
+    document.getElementById('dmText').textContent = data.dm;
+    document.getElementById('followupText').textContent = data.followup;
+
+    document.getElementById('results').style.display = 'block';
+  } catch (err) {
+    errorBox.textContent = err.message || 'Something went wrong generating your kit. Please try again.';
+    errorBox.style.display = 'block';
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+    btn.disabled = false;
+  }
+}
+
+function copyText(id, evt) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).catch(() => {});
+  evt.target.textContent = 'Copied';
+  setTimeout(() => { evt.target.textContent = 'Copy'; }, 1500);
+}
+</script>
+</body>
+</html>
